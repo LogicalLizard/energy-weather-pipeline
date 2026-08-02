@@ -1,5 +1,7 @@
 import time
 
+import pandas as pd
+
 from src.ingestion.smard import HOUR_MS, WEEK_MS, needs_refresh, parse_series, select_weeks
 
 SAMPLE = {
@@ -56,11 +58,27 @@ def test_select_weeks_keeps_future_weeks():
     assert select_weeks([future_week], start) == [future_week]
 
 
+def _write_parquet(path, values):
+    ts = pd.date_range("2026-06-01", periods=len(values), freq="h", tz="UTC")
+    pd.DataFrame({"timestamp": ts, "series": "x", "value": values}).to_parquet(path, index=False)
+
+
 def test_needs_refresh(tmp_path):
     now = 1_800_000_000_000
+    complete = tmp_path / "complete.parquet"
+    _write_parquet(complete, [1.0, 2.0, 3.0])
     missing = tmp_path / "missing.parquet"
-    existing = tmp_path / "existing.parquet"
-    existing.touch()
     assert needs_refresh(missing, now - 5 * WEEK_MS, now)  # missing is always fetched
-    assert not needs_refresh(existing, now - 5 * WEEK_MS, now)  # old and present: skip
-    assert needs_refresh(existing, now - WEEK_MS, now)  # recent: refresh anyway
+    assert not needs_refresh(complete, now - 5 * WEEK_MS, now)  # old and complete: skip
+    assert needs_refresh(complete, now - WEEK_MS, now)  # recent: refresh anyway
+
+
+def test_needs_refresh_repairs_bad_files(tmp_path):
+    now = 1_800_000_000_000
+    old = now - 5 * WEEK_MS
+    with_nulls = tmp_path / "nulls.parquet"
+    _write_parquet(with_nulls, [1.0, None, 3.0])
+    assert needs_refresh(with_nulls, old, now)  # null hours: fetched too early, repair
+    broken = tmp_path / "broken.parquet"
+    broken.write_bytes(b"not a parquet file")
+    assert needs_refresh(broken, old, now)

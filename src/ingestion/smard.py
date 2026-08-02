@@ -56,8 +56,18 @@ def select_weeks(timestamps: list[int], start_ms: int) -> list[int]:
 
 
 def needs_refresh(path, week_ts: int, now_ms: int) -> bool:
-    # old weeks are final, recent ones still get late data and corrections
-    return not path.exists() or now_ms - week_ts <= 2 * WEEK_MS
+    if not path.exists():
+        return True
+    if now_ms - week_ts <= 2 * WEEK_MS:
+        # recent weeks still get late data and corrections
+        return True
+    try:
+        values = pd.read_parquet(path, columns=["value"])["value"]
+    except Exception:
+        return True  # unreadable file: re-fetch and overwrite it
+    # a week with null hours was fetched before all values were published
+    # (e.g. the cron was down for a while) and must be repaired
+    return bool(values.isna().any())
 
 
 def parse_series(raw: dict, name: str) -> pd.DataFrame:
