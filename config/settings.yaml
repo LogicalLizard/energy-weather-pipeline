@@ -1,0 +1,31 @@
+storage:
+  # relative to the project root; swap for an s3://... prefix later if needed
+  base_path: data
+  raw_dir: raw
+  processed_dir: processed
+
+ingestion:
+  backfill_days: 90
+  timezone: Europe/Berlin
+
+weather:
+  # spread across Germany, averaged into one national series during transformation
+  locations:
+    - name: hamburg
+      lat: 53.55
+      lon: 9.99
+    - name: rostock
+      lat: 54.09
+      lon: 12.14
+    - name: berlin
+      lat: 52.52
+      lon: 13.41
+    - name: cologne
+      lat: 50.94
+      lon: 6.96
+    - name: frankfurt
+      lat: 50.11
+      lon: 8.68
+    - name: munich
+      lat: 48.14
+      lon: 11.58
