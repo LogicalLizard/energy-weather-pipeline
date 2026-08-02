@@ -90,6 +90,8 @@ def ingest(backfill_days: int) -> None:
     out_dir = raw_dir("open_meteo")
     today = utc_today()
     start = today - timedelta(days=backfill_days)
+    # one cutoff for the whole run so all locations end at the same hour
+    now = pd.Timestamp.now(tz="UTC")
 
     with httpx.Client(timeout=30, transport=httpx.HTTPTransport(retries=3)) as client:
         for loc in settings["weather"]["locations"]:
@@ -101,7 +103,7 @@ def ingest(backfill_days: int) -> None:
                     continue
                 raw = fetch_week(client, loc["lat"], loc["lon"], monday, week_end(monday, today))
                 df = parse_hourly(raw, loc["name"])
-                df = drop_unfinished_hours(df, pd.Timestamp.now(tz="UTC"))
+                df = drop_unfinished_hours(df, now)
                 # write to a temp file first so a killed run never leaves a half file behind
                 tmp = path.with_name(path.name + ".tmp")
                 df.to_parquet(tmp, index=False)
