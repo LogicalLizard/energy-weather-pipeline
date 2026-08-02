@@ -1,0 +1,65 @@
+name: pipeline
+
+on:
+  schedule:
+    # daily, after the day-ahead auction results are published (~13:00 Berlin time)
+    - cron: "30 13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# never let two runs race the data branch push
+concurrency:
+  group: pipeline
+
+jobs:
+  run:
+    # manual dispatches must not run from the data branch - it carries old code
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: install dependencies
+        run: pip install -r requirements.txt
+
+      - name: restore data from previous runs
+        run: |
+          # skip only when the data branch genuinely does not exist yet (first run);
+          # a transient fetch failure must fail the job - otherwise the force-push
+          # at the end would replace the accumulated history with a fresh backfill
+          if git fetch origin data; then
+            git checkout origin/data -- data/
+          elif git ls-remote --exit-code --heads origin data; then
+            echo "data branch exists but could not be fetched"
+            exit 1
+          fi
+
+      - name: run tests
+        run: pytest -q
+
+      - name: ingest
+        run: |
+          python -m src.ingestion.smard
+          python -m src.ingestion.open_meteo
+
+      - name: transform and test
+        run: |
+          dbt run --project-dir dbt --profiles-dir dbt
+          dbt test --project-dir dbt --profiles-dir dbt
+
+      - name: publish data branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B data
+          git add -f data/raw data/processed
+          git commit -m "data update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push -f origin data

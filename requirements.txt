@@ -1,9 +1,13 @@
-dbt-duckdb
-httpx
-pandas
-plotly
-pyarrow
-pyyaml
-pytest
-ruff
-streamlit
+# pinned so the daily pipeline (github actions) and the deployed dashboard
+# (streamlit cloud) run the exact versions this was tested with - especially
+# duckdb, where writer and reader must agree on the storage format
+dbt-duckdb==1.10.1
+duckdb==1.5.5
+httpx==0.28.1
+pandas==3.0.5
+plotly==6.9.0
+pyarrow==24.0.0
+pytest==9.1.1
+PyYAML==6.0.3
+ruff==0.16.1
+streamlit==1.60.0
