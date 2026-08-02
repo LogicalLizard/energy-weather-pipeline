@@ -1,0 +1,12 @@
+name: energy_weather
+version: "1.0"
+profile: energy_weather
+
+model-paths: ["models"]
+
+models:
+  energy_weather:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

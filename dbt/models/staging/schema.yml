@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  - name: stg_smard
+    columns:
+      - name: ts_utc
+        data_tests:
+          - not_null
+      - name: series
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - price_day_ahead
+                  - load
+                  - wind_onshore
+                  - wind_offshore
+                  - solar
+                  - biomass
+                  - hydro
+                  - lignite
+                  - hard_coal
+                  - natural_gas
+                  - pumped_storage
+                  - other_conventional
+                  - other_renewables
+      - name: value
+        data_tests:
+          - not_null
+
+  - name: stg_open_meteo
+    columns:
+      - name: ts_utc
+        data_tests:
+          - not_null
+      - name: location
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [hamburg, rostock, berlin, cologne, frankfurt, munich]
+      - name: temperature_c
+        data_tests:
+          - not_null
+      - name: wind_speed_ms
+        data_tests:
+          - not_null
+      - name: radiation_wm2
+        data_tests:
+          - not_null

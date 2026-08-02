@@ -1,0 +1,8 @@
+# run dbt from the repo root: dbt run --project-dir dbt --profiles-dir dbt
+energy_weather:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: data/processed/energy.duckdb
+      threads: 4

@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Parquet files written by the ingestion scripts
+    meta:
+      external_location: "read_parquet('data/raw/{name}/*.parquet')"
+    tables:
+      - name: smard
+      - name: open_meteo

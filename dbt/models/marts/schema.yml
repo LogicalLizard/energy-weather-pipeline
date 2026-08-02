@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: mart_energy_weather
+    description: Hourly electricity market data joined with national average weather
+    columns:
+      - name: ts_utc
+        data_tests:
+          - not_null
+          - unique
+
+  - name: mart_generation_mix
+    description: Hourly generation per technology in long format
+    columns:
+      - name: ts_utc
+        data_tests:
+          - not_null
+      - name: technology
+        data_tests:
+          - not_null
+      - name: generation_mwh
+        data_tests:
+          - not_null
