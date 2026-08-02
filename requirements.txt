@@ -1,2 +1,6 @@
+httpx
+pandas
+pyarrow
 pyyaml
+pytest
 ruff
