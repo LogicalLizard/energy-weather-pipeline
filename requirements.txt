@@ -1,7 +1,9 @@
 dbt-duckdb
 httpx
 pandas
+plotly
 pyarrow
 pyyaml
 pytest
 ruff
+streamlit
